@@ -6,6 +6,7 @@ plots_dir <- "/Users/benhamner/Git/BayesImpactHackathonThorn/Plots"
 data <- read.csv("/Users/benhamner/Data/BayesImpact/HackathonEscort/Working/NoTextBackpageOnly.csv")
 data$Date <- as.Date(data$Date)
 data$Age <- as.integer(as.character(data$Age))
+data$Price <- as.numeric(as.character(data$Price))
 
 city_counts  <- ddply(data, .(City), function(d) nrow(d))
 
@@ -38,4 +39,11 @@ age_counts <- ddply(data[data$Age>=18 & data$Age<=35 & !is.na(data$Age),], .(Age
 ggplot(age_counts, aes(x=Age, y=Count, colour=City)) + geom_line()
 ggsave(file.path(plots_dir, "AgeCity.png"))
 
-phone_counts <- ddply(data, .Phone)
+# phone_counts <- ddply(data, .(Phone), summarize, Count=nrow(Phone))
+# phone_counts <- phone_counts[with(phone_counts, order(-Count)),]
+
+phones <- count(data$Phone[!is.na(data$Phone)])
+names(phones) <- c("Phone", "Count")
+phones <- phones[with(phones, order(-Count)),]
+
+popular <- data[data$Phone==9173655170 & !is.na(data$Phone),]
