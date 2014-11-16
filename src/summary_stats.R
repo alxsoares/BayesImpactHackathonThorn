@@ -1,7 +1,9 @@
+library(ggmap)
 library(ggplot2)
 library(lubridate)
 library(plyr)
 library(scales)
+library(stringr)
 
 plots_dir <- "/Users/benhamner/Git/BayesImpactHackathonThorn/Plots"
 data <- read.csv("/Users/benhamner/Data/BayesImpact/HackathonEscort/Working/NoTextBackpageOnly.csv")
@@ -11,24 +13,32 @@ data$Price <- as.numeric(as.character(data$Price))
 data$DayOfWeek <- weekdays(data$Date)
 data$Hour <- hour(data$Date)
 
+min_date <- as.Date("2013-01-01")
+max_date <- as.Date("2014-08-01")
+
+ggplot(data, aes(x=Date)) + geom_histogram(binwidth=30, colour="white", fill="#0b5394") +
+  scale_x_date(labels = date_format("%Y-%b"),
+               breaks = seq(min_date, max_date, 30)) +
+  xlim(min_date, max_date) +
+  ylab("Monthly Posts") + xlab("") +
+  theme_bw(base_size=16)
+ggsave(file.path(plots_dir, "AllCitiesTime.png"))
+
+
 city_counts  <- ddply(data, .(City), function(d) nrow(d))
 
 top_10_city_counts <- city_counts[with(city_counts, order(-V1))[1:10],]
 top_10_cities <- top_10_city_counts$City
 
+top_500_city_counts <- city_counts[with(city_counts, order(-V1))[1:500],]
+top_500_cities <- top_500_city_counts$City
+median_city_prices <- ddply(data[(data$City %in% top_500_cities) & !is.na(data$Price),], .(City), summarize, MedianPrice=median(Price, na.rm=TRUE), Count=length(Price))
+median_city_prices <- median_city_prices[median_city_prices$Count>100,]
+median_city_prices <- adply(median_city_prices, 1, transform, FormattedAddress=geocode(as.character(City), output="all")$results[[1]]$formatted_address)
+write.csv(median_city_prices, "/Users/benhamner/Data/BayesImpact/HackathonEscort/Working/MedianCityPrices.csv")
+
 data <- data[data$City %in% top_10_cities,]
 data$City <- as.factor(as.character(data$City))
-
-min_date <- as.Date("2012-08-01")
-max_date <- as.Date("2014-08-01")
-
-ggplot(data, aes(x=Date)) + geom_histogram(binwidth=30, colour="white") +
-  scale_x_date(labels = date_format("%Y-%b"),
-               breaks = seq(min_date, max_date, 30)) +
-  xlim(min_date, max_date) +
-  ylab("Frequency") + xlab("Year and Month") +
-  theme_bw()
-ggsave(file.path(plots_dir, "Time.png"))
 
 ggplot(data, aes(x=Date, fill=City)) + geom_histogram(binwidth=30, colour="white") +
   scale_x_date(labels = date_format("%Y-%b"),
@@ -86,3 +96,7 @@ ggsave(file.path(plots_dir, "RacePrice.png"))
 
 ggplot(data, aes(x=DayOfWeek)) + geom_bar()
 ggsave(file.path(plots_dir, "DayOfWeek.png"))
+
+cost_of_living <- read.csv("/Users/benhamner/Data/BayesImpact/HackathonEscort/Raw/CostOfLiving.csv")
+cost_of_living$FormattedAddress <- paste0(as.character(cost_of_living$City), ", USA")
+median_city_joined <- join(median_city_prices, cost_of_living, by="FormattedAddress")
