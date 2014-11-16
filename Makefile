@@ -16,3 +16,9 @@ cities:
 
 sample:
 	python src/sample.py $(WORKING_DIR)/Sample.csv
+
+no-text:
+	python src/no_text.py $(WORKING_DIR)/NoText.csv
+
+no-text-backpage-only:
+	python src/no_text_backpage_only.py $(WORKING_DIR)/NoTextBackpageOnly.csv
