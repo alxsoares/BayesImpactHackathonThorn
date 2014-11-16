@@ -14,6 +14,7 @@ top_10_city_counts <- city_counts[with(city_counts, order(-V1))[1:10],]
 top_10_cities <- top_10_city_counts$City
 
 data <- data[data$City %in% top_10_cities,]
+data$City <- as.factor(as.character(data$City))
 
 min_date <- as.Date("2012-08-01")
 max_date <- as.Date("2014-08-01")
@@ -34,10 +35,32 @@ ggplot(data, aes(x=Date, fill=City)) + geom_histogram(binwidth=30, colour="white
   theme_bw()
 ggsave(file.path(plots_dir, "TimeCity.png"))
 
-age_counts <- ddply(data[data$Age>=18 & data$Age<=35 & !is.na(data$Age),], .(Age, City), summarize, Count=length(Age))
+ggplot(data, aes(x=Date, fill=Race)) + geom_histogram(binwidth=30, colour="white") +
+  scale_x_date(labels = date_format("%Y-%b"),
+               breaks = seq(min_date, max_date, 30)) +
+  xlim(min_date, max_date) +
+  ylab("Frequency") + xlab("Year and Month") +
+  theme_bw()
+ggsave(file.path(plots_dir, "TimeRace.png"))
 
-ggplot(age_counts, aes(x=Age, y=Count, colour=City)) + geom_line()
+age_city_counts <- ddply(data[data$Age>=18 & data$Age<=35 & !is.na(data$Age),], .(Age, City), summarize, Count=length(Age))
+ggplot(age_city_counts, aes(x=Age, y=Count, colour=City)) + geom_line()
 ggsave(file.path(plots_dir, "AgeCity.png"))
+
+age_race_counts <- ddply(data[data$Age>=18 & data$Age<=35 & !is.na(data$Age) & !is.na(data$Race),], .(Age, Race), summarize, Count=length(Age))
+ggplot(age_race_counts, aes(x=Age, y=Count, colour=Race)) + geom_line()
+ggsave(file.path(plots_dir, "AgeRace.png"))
+
+levels(data$City)[levels(data$City)=="District of Columbia"]="DC"
+levels(data$City)[levels(data$City)=="Georgia"]="GA"
+levels(data$City)[levels(data$City)=="North Carolina"]="NC"
+levels(data$City)[levels(data$City)=="Washington"]="WA"
+levels(data$City)[levels(data$City)=="New Jersy"]="NJ"
+levels(data$City)[levels(data$City)=="New York"]="NY"
+ggplot(data[!is.na(data$City) & data$Race!="",], aes(x=City, fill=Race)) +
+  geom_bar(position="fill") + 
+  theme_bw()
+ggsave(file.path(plots_dir, "CityRace.png"))
 
 # phone_counts <- ddply(data, .(Phone), summarize, Count=nrow(Phone))
 # phone_counts <- phone_counts[with(phone_counts, order(-Count)),]
@@ -47,3 +70,7 @@ names(phones) <- c("Phone", "Count")
 phones <- phones[with(phones, order(-Count)),]
 
 popular <- data[data$Phone==9173655170 & !is.na(data$Phone),]
+
+prices <- data[!is.na(data$Price) & data$Price>0 & data$Price<1000,]
+ggplot(prices, aes(x=City, y=Price)) +
+  geom_boxplot()
