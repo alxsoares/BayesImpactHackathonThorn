@@ -85,13 +85,15 @@ phones <- phones[with(phones, order(-Count)),]
 popular <- data[data$Phone==phones$Phone[2] & !is.na(data$Phone),]
 ggplot(popular, aes(x=Date, y=Price)) + geom_point()
 
-prices <- data[!is.na(data$Price) & data$Price>0 & data$Price<1000,]
+prices <- data[!is.na(data$Price) & data$Price>0 & data$Price<300,]
 ggplot(prices, aes(x=City, y=Price)) +
-  geom_boxplot()
+  geom_boxplot(fill="#0b5394") + 
+  theme_bw(base_size=16)
 ggsave(file.path(plots_dir, "CityPrice.png"))
 
 ggplot(prices, aes(x=Race, y=Price)) +
-  geom_boxplot()
+  geom_boxplot(fill="#0b5394") + 
+  theme_bw(base_size=16)
 ggsave(file.path(plots_dir, "RacePrice.png"))
 
 ggplot(data, aes(x=DayOfWeek)) + geom_bar()
