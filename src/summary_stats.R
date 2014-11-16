@@ -1,4 +1,5 @@
 library(ggplot2)
+library(lubridate)
 library(plyr)
 library(scales)
 
@@ -7,6 +8,8 @@ data <- read.csv("/Users/benhamner/Data/BayesImpact/HackathonEscort/Working/NoTe
 data$Date <- as.Date(data$Date)
 data$Age <- as.integer(as.character(data$Age))
 data$Price <- as.numeric(as.character(data$Price))
+data$DayOfWeek <- weekdays(data$Date)
+data$Hour <- hour(data$Date)
 
 city_counts  <- ddply(data, .(City), function(d) nrow(d))
 
@@ -55,7 +58,7 @@ levels(data$City)[levels(data$City)=="District of Columbia"]="DC"
 levels(data$City)[levels(data$City)=="Georgia"]="GA"
 levels(data$City)[levels(data$City)=="North Carolina"]="NC"
 levels(data$City)[levels(data$City)=="Washington"]="WA"
-levels(data$City)[levels(data$City)=="New Jersy"]="NJ"
+levels(data$City)[levels(data$City)=="New Jersey"]="NJ"
 levels(data$City)[levels(data$City)=="New York"]="NY"
 ggplot(data[!is.na(data$City) & data$Race!="",], aes(x=City, fill=Race)) +
   geom_bar(position="fill") + 
@@ -65,12 +68,21 @@ ggsave(file.path(plots_dir, "CityRace.png"))
 # phone_counts <- ddply(data, .(Phone), summarize, Count=nrow(Phone))
 # phone_counts <- phone_counts[with(phone_counts, order(-Count)),]
 
-phones <- count(data$Phone[!is.na(data$Phone)])
+phones <- count(data$Phone[!is.na(data$Phone) & !is.na(data$Price)])
 names(phones) <- c("Phone", "Count")
 phones <- phones[with(phones, order(-Count)),]
 
-popular <- data[data$Phone==9173655170 & !is.na(data$Phone),]
+popular <- data[data$Phone==phones$Phone[2] & !is.na(data$Phone),]
+ggplot(popular, aes(x=Date, y=Price)) + geom_point()
 
 prices <- data[!is.na(data$Price) & data$Price>0 & data$Price<1000,]
 ggplot(prices, aes(x=City, y=Price)) +
   geom_boxplot()
+ggsave(file.path(plots_dir, "CityPrice.png"))
+
+ggplot(prices, aes(x=Race, y=Price)) +
+  geom_boxplot()
+ggsave(file.path(plots_dir, "RacePrice.png"))
+
+ggplot(data, aes(x=DayOfWeek)) + geom_bar()
+ggsave(file.path(plots_dir, "DayOfWeek.png"))

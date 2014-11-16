@@ -22,3 +22,6 @@ no-text:
 
 no-text-backpage-only:
 	python src/no_text_backpage_only.py $(WORKING_DIR)/NoTextBackpageOnly.csv
+
+phone:
+	python src/phone.py $(WORKING_DIR) $(PHONE)
